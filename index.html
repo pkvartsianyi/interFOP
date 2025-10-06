@@ -15,6 +15,14 @@
         .card {
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
+        /* Стиль для кастомного скролбару (краща естетика) */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background-color: #a1a1aa; /* Gray 400 */
+            border-radius: 10px;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -34,23 +42,39 @@
     <div id="app" class="max-w-4xl mx-auto">
         <header class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-extrabold text-secondary">Облік валютних надходжень ФОП</h1>
-            <p class="text-gray-600 mt-2">Перерахунок доходу в гривні за курсом НБУ на дату надходження</p>
+            <p class="text-gray-600 mt-2">Перерахунок доходу в гривні за курсом НБУ на дату надходження (API PrivatBank)</p>
         </header>
 
         <!-- Форма додавання надходження -->
         <div id="input-card" class="card bg-white p-6 sm:p-8 rounded-xl mb-8 border-t-4 border-primary">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Додати надходження ($ USD)</h2>
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800">Додати надходження</h2>
             <form id="transaction-form" onsubmit="addTransaction(event)">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
+                    <!-- Дата -->
+                    <div class="col-span-2 md:col-span-1">
                         <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Дата надходження</label>
                         <input type="date" id="date" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150">
                     </div>
-                    <div>
-                        <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Сума ($ USD)</label>
+                    
+                    <!-- Сума -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Сума</label>
                         <input type="number" id="amount" required step="0.01" min="0.01" placeholder="1000.00" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150">
                     </div>
-                    <div>
+                    
+                    <!-- Валюта -->
+                    <div class="col-span-1 md:col-span-1">
+                        <label for="currency" class="block text-sm font-medium text-gray-700 mb-1">Валюта</label>
+                        <select id="currency" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-150 appearance-none bg-white">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="PLN">PLN</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+
+                    <!-- Кнопка -->
+                    <div class="col-span-2 md:col-span-1">
                         <label class="block text-sm font-medium text-gray-700 mb-1 opacity-0 hidden md:block">Кнопка</label>
                         <button type="submit" id="addButton" class="w-full py-3 px-4 bg-primary text-white font-semibold rounded-lg hover:bg-emerald-600 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
                             Додати
@@ -65,7 +89,7 @@
         <!-- Звіт за кварталами -->
         <div class="card bg-white p-6 sm:p-8 rounded-xl">
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Звітність та підсумки</h2>
-            <div id="quarterly-summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div id="quarterly-summary" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <!-- Сюди будуть додаватися картки з підсумками -->
             </div>
 
@@ -76,7 +100,8 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сума (USD)</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Валюта</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Сума</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Курс НБУ</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дохід (UAH)</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Дії</th>
@@ -85,16 +110,15 @@
                     <tbody id="transactions-list" class="bg-white divide-y divide-gray-200">
                         <!-- Сюди будуть додаватися транзакції -->
                         <tr id="no-transactions-row">
-                            <td colspan="5" class="px-4 py-4 text-center text-gray-500 italic">Надходжень поки немає.</td>
+                            <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">Надходжень поки немає.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
             <!-- Посилання на джерело курсу -->
-            <div id="sources-container" class="mt-6 pt-4 border-t border-gray-200 text-sm text-gray-500 hidden">
-                <p class="font-semibold mb-2">Джерела курсу НБУ (надані Google Search):</p>
-                <ul id="sources-list" class="list-disc list-inside space-y-1"></ul>
+            <div class="mt-6 pt-4 border-t border-gray-200 text-sm text-gray-500">
+                <p>Курси валют надано: <a href="https://api.privatbank.ua/p24api/" target="_blank" class="text-blue-500 hover:text-blue-700 font-medium">Публічний API ПриватБанку (курси НБУ)</a>.</p>
             </div>
         </div>
     </div>
@@ -102,11 +126,19 @@
     <script>
         // Глобальні змінні
         let transactions = [];
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent";
-        const apiKey = ""; // Залишаємо пустим для автоматичного надання Canvas
-        const MAX_RETRIES = 5;
+        const PRIVATBANK_API_URL = "https://api.privatbank.ua/p24api/exchange_rates?json&date=";
+        
+        // --- Утиліти для роботи з датою та форматуванням ---
 
-        // --- Утиліти для роботи з датою та кварталами ---
+        /**
+         * Перетворює YYYY-MM-DD на DD.MM.YYYY для API ПриватБанку.
+         * @param {string} dateString - Дата у форматі 'YYYY-MM-DD'.
+         * @returns {string} Дата у форматі 'DD.MM.YYYY'.
+         */
+        function formatDateForAPI(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}.${month}.${year}`;
+        }
 
         /**
          * Визначає, до якого кварталу належить дата.
@@ -131,12 +163,13 @@
         }
 
         /**
-         * Форматує число для валюти (USD).
+         * Форматує число для вказаної валюти.
          * @param {number} amount - Сума.
+         * @param {string} currencyCode - Код валюти (USD, EUR, тощо).
          * @returns {string} Відформатована сума.
          */
-        function formatUSD(amount) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(amount);
+        function formatCurrency(amount, currencyCode) {
+            return new Intl.NumberFormat('uk-UA', { style: 'currency', currency: currencyCode, minimumFractionDigits: 2 }).format(amount);
         }
 
         /**
@@ -146,30 +179,34 @@
          */
         function showMessage(message, type = 'info') {
             const box = document.getElementById('message-box');
-            let bgColor, textColor;
+            let bgColor, textColor, icon;
             
             switch (type) {
                 case 'success':
                     bgColor = 'bg-green-100';
                     textColor = 'text-green-800';
+                    icon = '✅';
                     break;
                 case 'error':
                     bgColor = 'bg-red-100';
                     textColor = 'text-red-800';
+                    icon = '❌';
                     break;
                 case 'warning':
                     bgColor = 'bg-yellow-100';
                     textColor = 'text-yellow-800';
+                    icon = '⚠️';
                     break;
                 case 'info':
                 default:
                     bgColor = 'bg-blue-100';
                     textColor = 'text-blue-800';
+                    icon = 'ℹ️';
                     break;
             }
             
-            box.className = `mt-4 p-3 rounded-lg text-sm ${bgColor} ${textColor}`;
-            box.textContent = message;
+            box.className = `mt-4 p-3 rounded-lg text-sm font-medium flex items-center ${bgColor} ${textColor}`;
+            box.innerHTML = `<span class="mr-2">${icon}</span> ${message}`;
             box.classList.remove('hidden');
         }
 
@@ -177,100 +214,57 @@
             document.getElementById('message-box').classList.add('hidden');
         }
 
-        // --- Логіка API для отримання курсу НБУ ---
+        // --- Логіка API для отримання курсу ---
 
         /**
-         * Робить API-виклик з експоненційним відступом.
-         * @param {string} apiUrl - URL API.
-         * @param {object} payload - Тіло запиту.
-         * @param {number} retries - Поточна кількість спроб.
-         * @returns {Promise<object>} JSON відповідь.
+         * Запитує курс НБУ на вказану дату з API ПриватБанку.
+         * @param {string} formattedDate - Дата у форматі DD.MM.YYYY.
+         * @param {string} currencyCode - Код валюти (USD, EUR, тощо).
+         * @returns {Promise<number>} Об'єкт з курсом.
          */
-        async function fetchWithRetry(apiUrl, payload, retries = 0) {
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    if (retries < MAX_RETRIES) {
-                        const delay = Math.pow(2, retries) * 1000 + Math.random() * 1000;
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        return fetchWithRetry(apiUrl, payload, retries + 1);
-                    } else {
-                        throw new Error(`Помилка API: ${response.status} ${response.statusText}`);
+        async function fetchPrivatBankRate(formattedDate, currencyCode) {
+            const url = `${PRIVATBANK_API_URL}${formattedDate}`;
+            
+            // Використовуємо експоненційний відступ для надійності, хоча тут це менш критично, ніж для Gemini API
+            const MAX_RETRIES = 3;
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Помилка мережі або API: ${response.status}`);
                     }
-                }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.exchangeRate || data.exchangeRate.length === 0) {
+                        throw new Error("Відповідь API не містить обмінних курсів.");
+                    }
 
-                return response.json();
-            } catch (error) {
-                if (retries < MAX_RETRIES) {
-                    const delay = Math.pow(2, retries) * 1000 + Math.random() * 1000;
+                    // Шукаємо курс для потрібної валюти
+                    const rateData = data.exchangeRate.find(rate => rate.currency === currencyCode);
+                    
+                    if (!rateData) {
+                        throw new Error(`Курс для валюти ${currencyCode} на дату ${formattedDate} не знайдено.`);
+                    }
+                    
+                    // Використовуємо saleRateNB (Національний Банк Курс Продажу)
+                    const rate = rateData.saleRateNB; 
+                    
+                    if (!rate || rate <= 0) {
+                        throw new Error(`Отримано недійсний курс НБУ (${rate}) для ${currencyCode}.`);
+                    }
+
+                    return rate;
+
+                } catch (error) {
+                    if (i === MAX_RETRIES - 1) {
+                        throw new Error(`Не вдалося отримати курс з PrivatBank API. ${error.message}`);
+                    }
+                    // Експоненційний відступ перед повтором
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 500;
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    return fetchWithRetry(apiUrl, payload, retries + 1);
                 }
-                throw error;
-            }
-        }
-
-        /**
-         * Запитує офіційний курс НБУ на вказану дату за допомогою Google Search.
-         * @param {string} date - Дата у форматі YYYY-MM-DD.
-         * @returns {Promise<{rate: number, sources: Array}>} Об'єкт з курсом та джерелами.
-         */
-        async function fetchNbuRate(date) {
-            const systemPrompt = "Act as an expert financial data retriever. Find the official NBU UAH/USD exchange rate for the specified date. Respond ONLY with the clean numeric value of the rate (e.g., 40.1234), without any descriptive text, currency codes, or explanation. If the exact rate for the date is unavailable, find the closest possible rate.";
-            const userQuery = `Official NBU UAH/USD exchange rate on ${date}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-            };
-
-            const url = `${API_URL}?key=${apiKey}`;
-
-            try {
-                const result = await fetchWithRetry(url, payload);
-
-                const candidate = result.candidates?.[0];
-                if (!candidate || !candidate.content?.parts?.[0]?.text) {
-                    throw new Error("Не вдалося отримати курс від API.");
-                }
-
-                const rawText = candidate.content.parts[0].text.trim();
-                // Спробуємо виділити числове значення
-                const rateMatch = rawText.match(/(\d{1,3}(?:[.,]\d+)?)/);
-                let rate = rateMatch ? parseFloat(rateMatch[1].replace(',', '.')) : NaN;
-
-                if (isNaN(rate) || rate <= 0) {
-                     // Додаткова спроба, якщо перший витяг не вдався або дав 0
-                     rate = parseFloat(rawText.replace(/[^0-9.]/g, ''));
-                }
-
-                if (isNaN(rate) || rate <= 0) {
-                    throw new Error(`Не вдалося розпізнати дійсний курс з відповіді: "${rawText}".`);
-                }
-
-                // Отримати джерела
-                let sources = [];
-                const groundingMetadata = candidate.groundingMetadata;
-                if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                    sources = groundingMetadata.groundingAttributions
-                        .map(attribution => ({
-                            uri: attribution.web?.uri,
-                            title: attribution.web?.title,
-                        }))
-                        .filter(source => source.uri && source.title);
-                }
-
-                return { rate, sources };
-
-            } catch (error) {
-                console.error("Помилка при запиті курсу НБУ:", error);
-                throw new Error(`Помилка отримання курсу: ${error.message}. Спробуйте іншу дату.`);
             }
         }
 
@@ -285,13 +279,16 @@
 
             const dateInput = document.getElementById('date');
             const amountInput = document.getElementById('amount');
+            const currencyInput = document.getElementById('currency');
             const addButton = document.getElementById('addButton');
 
             const date = dateInput.value;
-            const amountUSD = parseFloat(amountInput.value);
+            const amount = parseFloat(amountInput.value);
+            const currencyCode = currencyInput.value;
+            const formattedDate = formatDateForAPI(date);
 
-            if (!date || isNaN(amountUSD) || amountUSD <= 0) {
-                showMessage('Будь ласка, введіть коректну дату та суму.', 'warning');
+            if (!date || isNaN(amount) || amount <= 0 || !currencyCode) {
+                showMessage('Будь ласка, введіть коректну дату, суму та валюту.', 'warning');
                 return;
             }
 
@@ -301,16 +298,17 @@
 
             try {
                 // 1. Отримати курс НБУ
-                const { rate, sources } = await fetchNbuRate(date);
+                const rate = await fetchPrivatBankRate(formattedDate, currencyCode);
                 
                 // 2. Розрахунок доходу в UAH
-                const amountUAH = amountUSD * rate;
+                const amountUAH = amount * rate;
 
                 // 3. Створення об'єкта транзакції
                 const newTransaction = {
                     id: Date.now(),
                     date: date,
-                    amountUSD: amountUSD,
+                    currency: currencyCode,
+                    amount: amount,
                     rate: rate,
                     amountUAH: amountUAH,
                 };
@@ -320,12 +318,10 @@
                 // 4. Оновлення інтерфейсу
                 renderTransactions();
                 renderSummary();
-                renderSources(sources);
                 
-                showMessage(`Успішно додано: ${formatUSD(amountUSD)} за курсом ${rate.toFixed(4)} UAH = ${formatUAH(amountUAH)}.`, 'success');
+                showMessage(`Успішно додано: ${formatCurrency(amount, currencyCode)} за курсом ${rate.toFixed(4)} UAH = ${formatUAH(amountUAH)}.`, 'success');
 
-                // Очищення форми
-                dateInput.value = '';
+                // Очищення полів (крім дати)
                 amountInput.value = '';
 
             } catch (error) {
@@ -359,7 +355,7 @@
             list.innerHTML = '';
             
             if (transactions.length === 0) {
-                list.innerHTML = '<tr id="no-transactions-row"><td colspan="5" class="px-4 py-4 text-center text-gray-500 italic">Надходжень поки немає.</td></tr>';
+                list.innerHTML = '<tr><td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">Надходжень поки немає.</td></tr>';
                 return;
             }
 
@@ -371,7 +367,8 @@
                 row.className = 'hover:bg-gray-50 transition duration-100';
                 row.innerHTML = `
                     <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${t.date}</td>
-                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${formatUSD(t.amountUSD)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-700">${t.currency}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${formatCurrency(t.amount, t.currency)}</td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${t.rate.toFixed(4)}</td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-primary">${formatUAH(t.amountUAH)}</td>
                     <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
@@ -406,6 +403,18 @@
                 return;
             }
 
+            // Додаємо картку із загальним річним доходом
+            const totalAnnualUAH = sortedQuarters.reduce((sum, quarter) => sum + quarterlyTotals[quarter], 0);
+            const totalCard = document.createElement('div');
+            totalCard.className = 'bg-indigo-100 p-4 rounded-lg border border-indigo-300 col-span-2 lg:col-span-1';
+            totalCard.innerHTML = `
+                <p class="text-sm font-medium text-indigo-700">Загальний дохід (рік)</p>
+                <p class="text-xl font-bold text-indigo-800 mt-1">${formatUAH(totalAnnualUAH)}</p>
+                <p class="text-xs text-indigo-500 mt-1">Всі операції</p>
+            `;
+            summaryContainer.appendChild(totalCard);
+
+            // Додаємо картки по кварталах
             sortedQuarters.forEach(quarterName => {
                 const totalUAH = quarterlyTotals[quarterName];
                 const card = document.createElement('div');
@@ -413,31 +422,10 @@
                 card.innerHTML = `
                     <p class="text-sm font-medium text-gray-500">${quarterName} (Квартал)</p>
                     <p class="text-xl font-bold text-gray-800 mt-1">${formatUAH(totalUAH)}</p>
-                    <p class="text-xs text-gray-500 mt-1">Дохід для декларації</p>
+                    <p class="text-xs text-primary mt-1">Дохід для декларації</p>
                 `;
                 summaryContainer.appendChild(card);
             });
-        }
-
-        /**
-         * Рендерить посилання на джерела.
-         * @param {Array<object>} sources - Масив об'єктів джерел.
-         */
-        function renderSources(sources) {
-            const container = document.getElementById('sources-container');
-            const list = document.getElementById('sources-list');
-            list.innerHTML = '';
-
-            if (sources.length > 0) {
-                sources.forEach(source => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<a href="${source.uri}" target="_blank" class="text-blue-500 hover:text-blue-700 truncate block" title="${source.title}">${source.title}</a>`;
-                    list.appendChild(li);
-                });
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
         }
 
         // Ініціалізація
@@ -456,4 +444,3 @@
     </script>
 </body>
 </html>
-
