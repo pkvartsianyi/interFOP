@@ -1,0 +1,16 @@
+/* Стилі для шрифту Inter та округлених кутів */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f7fafc;
+}
+.card {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+/* Стиль для кастомного скролбару (краща естетика) */
+.overflow-x-auto::-webkit-scrollbar {
+    height: 8px;
+}
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background-color: #a1a1aa; /* Gray 400 */
+    border-radius: 10px;
+}
