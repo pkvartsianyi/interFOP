@@ -1,6 +1,6 @@
         // Глобальні змінні
         let transactions = [];
-        const PRIVATBANK_API_URL = "/";
+        const PRIVATBANK_API_URL = "/api/exchange_rates";
         
         // --- Утиліти для роботи з датою та форматуванням ---
 
@@ -97,7 +97,7 @@
          * @returns {Promise<number>} Об'єкт з курсом.
          */
         async function fetchPrivatBankRate(formattedDate, currencyCode) {
-            const url = `${PRIVATBANK_API_URL}?date=${formattedDate}`;
+            const url = `${PRIVATBANK_API_URL}?json&date=${formattedDate}`;
             
             // Використовуємо експоненційний відступ для надійності, хоча тут це менш критично, ніж для Gemini API
             const MAX_RETRIES = 3;
